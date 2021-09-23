@@ -11,7 +11,6 @@ env:
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   COMPILE_TARGET: ramips-mt7620-xiaomi_miwifi-r3
-  UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: UTC
 
@@ -51,6 +50,7 @@ jobs:
         path: |
           openwrt/staging_dir
           openwrt/build_dir
+          openwrt/dl
 
     - name: Setup feeds
       run: |
@@ -113,14 +113,6 @@ jobs:
         cd openwrt/bin/targets/*/*
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "::set-output name=status::success"
-
-    - name: Upload firmware directory
-      uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: ${{ env.FIRMWARE }}
 
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
