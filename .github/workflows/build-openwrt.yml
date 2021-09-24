@@ -22,6 +22,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@main
+      with:
+        fetch-depth: 1
 
     - name: Initialization environment
       env:
@@ -49,11 +51,13 @@ jobs:
       env:
         cache-name: cache-openwrt
       with:
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.REPO_BRANCH }}
         path: |
           openwrt/staging_dir
           openwrt/build_dir
           openwrt/dl
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.REPO_BRANCH }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
 
     - name: Setup feeds
       run: |
@@ -69,7 +73,7 @@ jobs:
 
     - name: Load custom config
       run: |
-        [ -f $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config && echo 'Custom config loaded!'
+        [ -f $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config && echo 'Custom config loaded!' || echo 'No custom config!'
 
     - name: Apply patches
       run: |
@@ -89,6 +93,7 @@ jobs:
     
     - name: Read config target
       run: |
+        cd openwrt
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/^CONFIG_TARGET_(.*)_(.*)_DEVICE_(.*)=y/\1/' > ARCH_NAME
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/^CONFIG_TARGET_(.*)_(.*)_DEVICE_(.*)=y/\2/' > CPU_NAME
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/^CONFIG_TARGET_(.*)_(.*)_DEVICE_(.*)=y/\3/' > DEVICE_NAME
