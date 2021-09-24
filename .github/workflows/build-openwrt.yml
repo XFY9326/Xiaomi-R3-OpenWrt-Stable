@@ -59,6 +59,14 @@ jobs:
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.REPO_BRANCH }}
         restore-keys: |
           ${{ runner.os }}-build-${{ env.cache-name }}-
+    
+    - name: Check cache
+      if: steps.cache-openwrt.outputs.cache-hit == 'true'
+      run: |
+        [ -d openwrt/staging_dir ] && echo "Found staging_dir cache" || echo "No staging_dir cache"
+        [ -d openwrt/build_dir ] && echo "Found build_dir cache" || echo "No build_dir cache"
+        [ -d openwrt/dl ] && echo "Found dl cache" ||  echo "No dl cache"
+        ls -al openwrt
 
     - name: Setup feeds
       run: |
