@@ -55,11 +55,6 @@ jobs:
           openwrt/build_dir
           openwrt/dl
 
-    - name: Clean temp
-      run : |
-        [ -d openwrt/tmp ] && rm -rf openwrt/tmp && echo "Delete tmp"
-        [ -d openwrt/bin ] && rm -rf openwrt/bin && echo "Delete bin"
-
     - name: Setup feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
