@@ -8,6 +8,7 @@ on:
 env:
   REPO_URL: https://github.com/openwrt/openwrt.git
   REPO_BRANCH: openwrt-21.02
+  REPO_DEPTH: 1
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   FILES_PATH: files
@@ -43,7 +44,7 @@ jobs:
     - name: Clone source code
       working-directory: /workdir
       run: |
-        git clone --depth 1 --branch $REPO_BRANCH $REPO_URL openwrt
+        git clone --depth $REPO_DEPTH --branch $REPO_BRANCH $REPO_URL openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: Cache OpenWrt
@@ -122,34 +123,40 @@ jobs:
           rm -rf padded_kernel.bin && \
           sha256sum -b openwrt-${ARCH_NAME}-${CPU_NAME}-${DEVICE_NAME}-squashfs-pbboot.bin >> sha256sums
 
-    - name: Organize files
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+    - name: Prepare release
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
+        touch release.txt
+        echo "Branch: $REPO_BRANCH" >> release.txt
+        echo "Date: $(date +"%Y-%m-%d_%H:%M")" >> release.txt
+        echo "Arch: $ARCH_NAME" >> release.txt
+        echo "CPU: $CPU_NAME" >> release.txt
+        echo "Deivce: $DEVICE_NAME" >> release.txt
         cd openwrt/bin/targets/$ARCH_NAME/$CPU_NAME
         rm -rf packages
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "FIRMWARE_PATH=$PWD" >> $GITHUB_ENV
 
-    - name: Upload firmware to release
+    - name: Upload release
       uses: softprops/action-gh-release@v1
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ env.REPO_BRANCH }}
-        files: ${{ env.FIRMWARE }}/*
+        body_path: release.txt
+        files: ${{ env.FIRMWARE_PATH }}/*
 
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
       with:
-        retain_days: 1
+        retain_days: 7
         keep_minimum_runs: 2
 
-    - name: Remove old Releases
+    - name: Remove old releases
       uses: dev-drprasad/delete-older-releases@v0.1.0
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
-        keep_latest: 1
+        keep_latest: 2
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
