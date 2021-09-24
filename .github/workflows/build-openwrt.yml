@@ -114,7 +114,8 @@ jobs:
           dd if=/dev/zero bs=4M count=1 | tr "\000" "\377" > padded_kernel.bin && \
           dd if=openwrt-${ARCH_NAME}-${CPU_NAME}-${DEVICE_NAME}-squashfs-kernel1.bin of=padded_kernel.bin conv=notrunc && \
           cat padded_kernel.bin openwrt-${ARCH_NAME}-${CPU_NAME}-${DEVICE_NAME}-squashfs-rootfs0.bin > openwrt-${ARCH_NAME}-${CPU_NAME}-${DEVICE_NAME}-squashfs-pbboot.bin && \
-          rm -rf padded_kernel.bin
+          rm -rf padded_kernel.bin && \
+          sha256sum -b openwrt-${ARCH_NAME}-${CPU_NAME}-${DEVICE_NAME}-squashfs-pbboot.bin >> sha256sums
 
     - name: Organize files
       id: organize
